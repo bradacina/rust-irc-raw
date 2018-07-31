@@ -1,9 +1,10 @@
-use std::io::{Read, Write};
+use connection_reader::ConnectionReader;
+use std::io::Write;
 use std::net::TcpStream;
 use std::str;
 use std::time::Duration;
 
-struct Message {}
+mod connection_reader;
 
 fn main() {
     let mut write_buf = String::new();
@@ -14,39 +15,28 @@ fn main() {
     con.set_read_timeout(timeout_duration)
         .expect("set_read_timeout has failed");
 
+    let mut reader = ConnectionReader::new();
+
     send_user("testuser", &mut write_buf);
     send_nick("testuser123", &mut write_buf);
 
     loop {
-        loop_once(&mut con, &mut write_buf);
+        loop_once(&mut con, &mut write_buf, &mut reader);
     }
 }
 
-fn loop_once(con: &mut TcpStream, write_buf: &mut String) {
-    let mut buf = [0; 1024];
-    let messages = read_connection(con, &mut buf);
-    handle_messages(&messages, write_buf);
+fn loop_once(con: &mut TcpStream, write_buf: &mut String, reader: &mut ConnectionReader) {
+    let message_iter = reader.read_messages(con);
+
+    if let Some(messages) = message_iter {
+        handle_messages(messages, write_buf);
+    }
     write_connection(con, write_buf);
 }
 
-fn read_connection(con: &mut TcpStream, buf: &mut [u8]) -> Vec<Message> {
-    let result: Vec<Message> = vec![];
-
-    match con.read(buf) {
-        Ok(bytes_read) => {
-            if bytes_read > 0 {
-                println!(
-                    "=={}==",
-                    str::from_utf8(buf).expect("server sent us invalid utf8")
-                );
-            }
-        }
-        Err(_) => (),
-    }
-    result
+fn handle_messages(messages: Vec<String>, write_buf: &String) {
+    
 }
-
-fn handle_messages(messages: &[Message], write_buf: &String) {}
 
 fn write_connection(con: &mut TcpStream, write_buf: &mut String) {
     if write_buf.len() == 0 {
