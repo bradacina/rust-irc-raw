@@ -1,10 +1,12 @@
 use connection_reader::ConnectionReader;
-use std::io::Write;
+use connection_writer as cw;
+use message_handler as mh;
 use std::net::TcpStream;
-use std::str;
 use std::time::Duration;
 
 mod connection_reader;
+mod connection_writer;
+mod message_handler;
 
 fn main() {
     let mut write_buf = String::new();
@@ -17,8 +19,8 @@ fn main() {
 
     let mut reader = ConnectionReader::new();
 
-    send_user("testuser", &mut write_buf);
-    send_nick("testuser123", &mut write_buf);
+    mh::send_user("testuser", &mut write_buf);
+    mh::send_nick("testuser123", &mut write_buf);
 
     loop {
         loop_once(&mut con, &mut write_buf, &mut reader);
@@ -29,38 +31,7 @@ fn loop_once(con: &mut TcpStream, write_buf: &mut String, reader: &mut Connectio
     let message_iter = reader.read_messages(con);
 
     if let Some(messages) = message_iter {
-        handle_messages(messages, write_buf);
+        mh::handle_messages(messages, write_buf);
     }
-    write_connection(con, write_buf);
-}
-
-fn handle_messages(messages: Vec<String>, write_buf: &String) {
-    
-}
-
-fn write_connection(con: &mut TcpStream, write_buf: &mut String) {
-    if write_buf.len() == 0 {
-        return;
-    }
-
-    println!("writting {}", write_buf);
-    con.write_all(write_buf.as_bytes())
-        .expect("could not write_all");
-    write_buf.clear();
-}
-
-fn send_user(username: &str, write_buf: &mut String) {
-    write_buf.push_str("USER ");
-    write_buf.push_str(username);
-    write_buf.push_str(" 0 * :");
-    write_buf.push_str(username);
-    write_buf.push('\r');
-    write_buf.push('\n');
-}
-
-fn send_nick(nick: &str, write_buf: &mut String) {
-    write_buf.push_str("NICK ");
-    write_buf.push_str(nick);
-    write_buf.push('\r');
-    write_buf.push('\n');
+    cw::write_connection(con, write_buf);
 }

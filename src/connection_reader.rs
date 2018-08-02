@@ -1,7 +1,5 @@
 use std::io::Read;
-use std::net::TcpStream;
 use std::ops::AddAssign;
-use std::str::Lines;
 
 pub struct ConnectionReader {
     buf: [u8; 1024],
@@ -16,7 +14,7 @@ impl ConnectionReader {
         };
     }
 
-    pub fn read_messages(&mut self, con: &mut TcpStream) -> Option<Vec<String>> {
+    pub fn read_messages(&mut self, con: &mut Read) -> Option<Vec<String>> {
 
         let bytes_read = match con.read(&mut self.buf) {
             Ok(br) => br,
@@ -35,7 +33,9 @@ impl ConnectionReader {
 
         let message = message_result.unwrap();
 
-        Some(message.lines().map(|item| String::from(item)).collect::<Vec<String>>())
+        println!("Received\r\n{}", message);
+
+        Some(message.lines().map(|item| String::from(item)).collect::<Vec<_>>())
     }
 
     fn extract_leftover(&mut self, bytes_read: usize) -> Option<String> {
