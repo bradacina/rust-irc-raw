@@ -1,5 +1,4 @@
 use std::io::Read;
-use std::ops::AddAssign;
 
 pub struct ConnectionReader {
     buf: [u8; 1024],
@@ -10,7 +9,7 @@ impl ConnectionReader {
     pub fn new() -> ConnectionReader {
         return ConnectionReader {
             buf: [0; 1024],
-            prefix: String::new(),
+            prefix: String::with_capacity(1024),
         };
     }
 
@@ -44,13 +43,14 @@ impl ConnectionReader {
 
         if self.prefix.len() > 0 {
             s.insert_str(0, &self.prefix);
+            self.prefix.clear();
         }
 
         let find_result = s.rfind("\r\n");
 
         if let Some(last_index) = find_result {
             if last_index < s.len() - 2 {
-                self.prefix = String::from(&s[last_index + 2..]);
+                self.prefix.push_str(&s[last_index + 2..]);
                 s.truncate(last_index);
             } else {
                 self.prefix.clear();
@@ -58,7 +58,7 @@ impl ConnectionReader {
 
             return Some(s);
         } else {
-            self.prefix.add_assign(&s);
+            self.prefix.push_str(&s);
 
             return None;
         }
