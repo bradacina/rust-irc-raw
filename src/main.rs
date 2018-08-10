@@ -7,8 +7,13 @@ use std::time::Duration;
 mod connection_reader;
 mod connection_writer;
 mod message_handler;
+mod term_init;
+
+extern crate libc;
 
 fn main() {
+    let mut term_init = term_init::TermInit::init();
+
     let mut write_buf = String::new();
 
     let timeout_duration = Some(Duration::from_millis(10));
