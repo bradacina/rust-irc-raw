@@ -59,6 +59,7 @@ impl TermInit {
             }
         }
 
+        println!("successfully set console mode");
         TermInit { hOut, originalMode }
     }
 

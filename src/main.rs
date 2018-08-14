@@ -1,19 +1,52 @@
 use connection_reader::ConnectionReader;
 use connection_writer as cw;
 use message_handler as mh;
+use std::io::stdout;
+use std::io::Write;
 use std::net::TcpStream;
 use std::time::Duration;
+use terminal::{color, cursor, misc, term_init};
+use widgets::window::Window;
 
 mod connection_reader;
 mod connection_writer;
 mod message_handler;
-mod term_init;
+mod terminal;
+mod widgets;
 
 extern crate libc;
 
 fn main() {
-    let mut term_init = term_init::TermInit::init();
+    let mut _term_init = term_init::TermInit::init();
 
+    misc::use_alternate_screen_buffer();
+
+    color::bright_red();
+    print!("hello");
+    color::red();
+    print!("hello");
+    color::green();
+    color::underline();
+    print!("there");
+    color::bright();
+    print!("there");
+
+    stdout().flush();
+    std::thread::sleep(std::time::Duration::from_secs(2));
+
+    let mut w1 = Window::new(10, 10, 1, 0);
+    let mut w2 = Window::new(10, 10, 1, 20);
+
+    w1.draw();
+    w2.draw();
+    stdout().flush();
+
+    std::thread::sleep(std::time::Duration::from_secs(2));
+
+    color::reset();
+
+    misc::use_main_screen_buffer();
+    /*
     let mut write_buf = String::new();
 
     let timeout_duration = Some(Duration::from_millis(10));
@@ -30,6 +63,7 @@ fn main() {
     loop {
         loop_once(&mut con, &mut write_buf, &mut reader);
     }
+    */
 }
 
 fn loop_once(con: &mut TcpStream, write_buf: &mut String, reader: &mut ConnectionReader) {
