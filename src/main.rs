@@ -4,7 +4,6 @@ use message_handler as mh;
 use std::io::stdout;
 use std::io::Write;
 use std::net::TcpStream;
-use std::time::Duration;
 use terminal::{color, cursor, misc, term_init};
 use widgets::window::Window;
 
