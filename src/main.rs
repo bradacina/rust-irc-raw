@@ -21,27 +21,36 @@ fn main() {
 
     misc::use_alternate_screen_buffer();
 
-    color::bright_red();
-    print!("hello");
-    color::red();
-    print!("hello");
-    color::green();
-    color::underline();
-    print!("there");
-    color::bright();
-    print!("there");
+    let mut w1 = Window::new(20, 20, 1, 0);
+    let mut w2 = Window::new(20, 20, 1, 20);
 
-    stdout().flush();
-    std::thread::sleep(std::time::Duration::from_secs(2));
+    w1.add("we are here\r\n");
+    w1.add("somewhere over the rainbow\r\n");
+    w1.add("a\r\n");
+    w1.add("b\n");
+    w1.add("c\n");
 
-    let mut w1 = Window::new(10, 10, 1, 0);
-    let mut w2 = Window::new(10, 10, 1, 20);
+    w2.add("there was a boy\r\nwho had a dog\nand bingo was his name\r\nq\r\nw\ne");
 
     w1.draw();
     w2.draw();
     stdout().flush();
 
-    std::thread::sleep(std::time::Duration::from_secs(2));
+    std::thread::sleep(std::time::Duration::from_secs(5));
+
+    w1.add("we are here\r\n");
+    w1.add("somewhere over the rainbow\r\n");
+    w1.add("a\r\n");
+    w1.add("b\n");
+    w1.add("c\n");
+    w2.add("there was a boy\r\nwho had a dog\nand bingo was his name\r\nq\r\nw\ne");
+    
+
+    w1.draw();
+    w2.draw();
+    stdout().flush();
+
+    std::thread::sleep(std::time::Duration::from_secs(5));
 
     color::reset();
 
