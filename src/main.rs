@@ -1,3 +1,5 @@
+#[macro_use] extern crate failure;
+
 use connection_reader::ConnectionReader;
 use connection_writer as cw;
 use message_handler as mh;
@@ -20,36 +22,13 @@ fn main() {
 
     misc::use_alternate_screen_buffer();
 
-    let mut w1 = Window::new(20, 20, 1, 0);
-    let mut w2 = Window::new(20, 20, 1, 20);
+    //    stdout().flush();
 
-    w1.add("we are here\r\n");
-    w1.add("somewhere over the rainbow\r\n");
-    w1.add("a\r\n");
-    w1.add("b\n");
-    w1.add("c\n");
+    //  std::thread::sleep(std::time::Duration::from_secs(5));
 
-    w2.add("there was a boy\r\nwho had a dog\nand bingo was his name\r\nq\r\nw\ne");
-
-    w1.draw();
-    w2.draw();
+    let (x,y) = misc::query_cursor_pos()?;
     stdout().flush();
-
-    std::thread::sleep(std::time::Duration::from_secs(5));
-
-    w1.add("we are here\r\n");
-    w1.add("somewhere over the rainbow\r\n");
-    w1.add("a\r\n");
-    w1.add("b\n");
-    w1.add("c\n");
-    w2.add("there was a boy\r\nwho had a dog\nand bingo was his name\r\nq\r\nw\ne");
-    
-
-    w1.draw();
-    w2.draw();
-    stdout().flush();
-
-    std::thread::sleep(std::time::Duration::from_secs(5));
+    std::thread::sleep(std::time::Duration::from_secs(10));
 
     color::reset();
 

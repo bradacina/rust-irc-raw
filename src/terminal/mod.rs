@@ -4,3 +4,4 @@ pub mod cursor;
 pub mod misc;
 
 mod consts;
+mod error;

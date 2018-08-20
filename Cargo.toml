@@ -5,3 +5,4 @@ authors = ["animosity"]
 
 [dependencies]
 libc="*"
+failure="*"

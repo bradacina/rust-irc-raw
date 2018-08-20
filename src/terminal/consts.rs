@@ -29,3 +29,4 @@ pub const ERASE: &str = "X";
 
 pub const ALTERNATE_SCREEN_BUFFER: &str = "?1049h";
 pub const MAIN_SCREEN_BUFFER: &str = "?1049l";
+pub const QUERY_CURSOR_POS: &str = "6n";
