@@ -7,9 +7,12 @@ type BOOL = libc::c_int;
 
 const INVALID_HANDLE_VALUE: HANDLE = -1isize as HANDLE;
 const STD_OUTPUT_HANDLE: DWORD = 0xFFFFFFF5;
+const STD_INPUT_HANDLE: DWORD = 0xFFFFFFF6;
 const FALSE: BOOL = 0;
 const ENABLE_VIRTUAL_TERMINAL_PROCESSING: DWORD = 0x0004;
 const DISABLE_NEWLINE_AUTO_RETURN: DWORD = 0x0008;
+const ENABLE_VIRTUAL_TERMINAL_INPUT: DWORD = 0x0200;
+const ENABLE_PROCESSED_INPUT:DWORD = 0x0001;
 
 #[cfg(target_os = "windows")]
 #[link(name = "kernel32")]
@@ -27,61 +30,94 @@ extern "system" {
 
 pub struct TermInit {
     hOut: HANDLE,
-    originalMode: DWORD,
+    hIn: HANDLE,
+    originalOutputMode: DWORD,
+    originalInputMode: DWORD,
 }
 
 impl TermInit {
     #[cfg(target_os = "windows")]
     pub fn init() -> TermInit {
         let hOut: HANDLE;
+        let hIn: HANDLE;
         unsafe {
             hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+            hIn = GetStdHandle(STD_INPUT_HANDLE);
         }
         if hOut == INVALID_HANDLE_VALUE {
-            panic!("Cannot GetStdHandle");
+            panic!("Cannot GetStdHandle for stdout");
         }
 
-        let mut originalMode: DWORD = 0;
-        let p_originalMode: *mut DWORD = &mut originalMode;
+        if hIn == INVALID_HANDLE_VALUE {
+            panic!("Cannot GetStdHandle for stdin");
+        }
+
+        let mut originalOutputMode: DWORD = 0;
+        let p_originalOutputMode: *mut DWORD = &mut originalOutputMode;
+
+        let mut originalInputMode: DWORD = 0;
+        let p_originalInputMode: *mut DWORD = &mut originalInputMode;
 
         unsafe {
-            if GetConsoleMode(hOut, p_originalMode) == FALSE {
-                panic!("could not get the original console mode");
+            if GetConsoleMode(hOut, p_originalOutputMode) == FALSE {
+                panic!("could not get the original stdout console mode");
+            }
+
+            if GetConsoleMode(hIn, p_originalInputMode) == FALSE {
+                panic!("could not get the original stdin console mode")
             }
         }
 
-        let requested_modes =
-            originalMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN;
+        let requested_output_modes =
+            originalOutputMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN;
+
+        let requested_input_modes = ENABLE_VIRTUAL_TERMINAL_INPUT | ENABLE_PROCESSED_INPUT;
 
         unsafe {
-            if SetConsoleMode(hOut, requested_modes) == FALSE {
-                panic!("could not set the requested console mode");
+            if SetConsoleMode(hOut, requested_output_modes) == FALSE {
+                panic!("could not set the requested stdout console mode");
+            }
+
+            if SetConsoleMode(hIn, requested_input_modes) == FALSE {
+                panic!("could not set the requested stdin console mode");
             }
         }
 
         println!("successfully set console mode");
-        TermInit { hOut, originalMode }
+        TermInit {
+            hOut,
+            hIn,
+            originalOutputMode,
+            originalInputMode,
+        }
     }
 
     #[cfg(not(target_os = "windows"))]
     fn init() -> TermInit {
         TermInit {
             hOut: INVALID_HANDLE_VALUE,
-            originalMode: 0,
+            hIn: INVALID_HANDLE_VALUE,
+            originalOutputMode: 0,
+            originalInputMode: 0,
         }
     }
 }
 
 impl Drop for TermInit {
     fn drop(&mut self) {
-        if self.hOut == INVALID_HANDLE_VALUE {
-            return;
+        if self.hOut != INVALID_HANDLE_VALUE {
+            unsafe {
+                if SetConsoleMode(self.hOut, self.originalOutputMode) == FALSE {
+                    eprintln!("could not reset the original stdout console mode");
+                }
+            }
         }
 
-        // set console's original mode
-        unsafe {
-            if SetConsoleMode(self.hOut, self.originalMode) == FALSE {
-                eprintln!("could not reset the original console mode");
+        if self.hIn != INVALID_HANDLE_VALUE {
+            unsafe {
+                if SetConsoleMode(self.hIn, self.originalInputMode) == FALSE {
+                    eprintln!("could not reset the original stdin console mode");
+                }
             }
         }
     }

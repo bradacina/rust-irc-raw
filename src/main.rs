@@ -26,7 +26,9 @@ fn main() {
 
     //  std::thread::sleep(std::time::Duration::from_secs(5));
 
-    let (x,y) = misc::query_cursor_pos()?;
+    let (x,y) = misc::query_cursor_pos().unwrap();
+    cursor::move_to(1,1);
+    print!("{},{}", x,y);
     stdout().flush();
     std::thread::sleep(std::time::Duration::from_secs(10));
 

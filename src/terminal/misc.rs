@@ -17,11 +17,17 @@ pub fn query_cursor_pos() -> Result<(usize, usize), Error> {
     print!("{}{}", CSI, QUERY_CURSOR_POS);
     stdout().flush();
 
-    cursor::move_to(1,1);
+    cursor::move_to(5,5);
+    print!("sent query");
+    stdout().flush();
 
     let mut r = String::new();
     let r_how_many = stdin().read_to_string(&mut r)?;
     
+    cursor::move_to(6,5);
+    print!("read query");
+    stdout().flush();
+
     if !r.starts_with('[') {
         return Err(Error::from(TerminalError::InvalidVTSequence{sequence:r}));
     }
