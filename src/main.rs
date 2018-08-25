@@ -1,4 +1,5 @@
-#[macro_use] extern crate failure;
+#[macro_use]
+extern crate failure;
 
 use connection_reader::ConnectionReader;
 use connection_writer as cw;
@@ -22,14 +23,45 @@ fn main() {
 
     misc::use_alternate_screen_buffer();
 
-    //    stdout().flush();
+    let (x, y) = misc::query_cursor_pos().expect("Error while trying to Query Cursor Position");
 
-    //  std::thread::sleep(std::time::Duration::from_secs(5));
+    //break up the screen width into 3 areas (60% for main display, 20% for users in channel, 20% for channel list )
 
-    let (x,y) = misc::query_cursor_pos().unwrap();
-    cursor::move_to(1,1);
-    print!("{},{}", x,y);
-    stdout().flush();
+    let main_window_size: usize = (x as f32 * 0.6) as usize;
+    let users_window_size: usize = (x as f32 * 0.2) as usize;
+    let chanlist_window_size: usize = (x as f32 * 0.2) as usize;
+
+    let mut main_window = Window::new(main_window_size as u16, (y - 2) as u16, 1, 1);
+    let mut users_window = Window::new(
+        users_window_size as u16,
+        y as u16,
+        1,
+        (main_window_size + 1) as u16,
+    );
+    let mut chanlist_window = Window::new(
+        chanlist_window_size as u16,
+        y as u16,
+        1,
+        (main_window_size + users_window_size + 1) as u16,
+    );
+
+    main_window.add("main window");
+    users_window.add("users window");
+    chanlist_window.add("channels window");
+
+    let mut t = str::repeat("q", 150);
+    t.push_str("\r\n");
+    (1..100).for_each(|i| {
+        main_window.add(&format!("{}",i));
+        main_window.add(&t);
+    });
+
+    main_window.draw();
+    users_window.draw();
+    chanlist_window.draw();
+
+    stdout().flush().unwrap();
+
     std::thread::sleep(std::time::Duration::from_secs(10));
 
     color::reset();

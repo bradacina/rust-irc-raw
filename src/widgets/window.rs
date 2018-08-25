@@ -1,5 +1,5 @@
 use std::iter::Iterator;
-use terminal::cursor;
+use terminal::{consts, cursor, misc};
 
 pub struct Window {
     pub Width: u16,
@@ -7,6 +7,8 @@ pub struct Window {
     pub PosRow: u16,
     pub PosCol: u16,
     buffer: String,
+    pub wrap: bool,
+    pub auto_scroll: bool
 }
 
 impl Window {
@@ -17,6 +19,8 @@ impl Window {
             PosRow: posRow,
             PosCol: posCol,
             buffer: String::new(),
+            wrap: false,
+            auto_scroll: false
         };
     }
 
@@ -25,9 +29,10 @@ impl Window {
     }
 
     pub fn draw(&mut self) {
-        let lines = self.proccess();
+        self.draw_margins();
+        let lines = self.process();
 
-        let mut line_count = 0;
+        let mut line_count = 1;
 
         lines.iter().for_each(|line| {
             if line_count >= self.Height {
@@ -49,13 +54,59 @@ impl Window {
         });
     }
 
-    pub fn proccess(&self) -> Vec<&str> {
+    fn draw_margins(&self) {
+        misc::dec_line_drawing();
+
+        let vert_line = str::repeat(
+            &format!(
+                "{}{}{}{}{}{}{}",
+                consts::ESC,
+                consts::CURSOR_SAVE_POS,
+                consts::DEC_VERT_LINE,
+                consts::ESC,
+                consts::CURSOR_LOAD_POS,
+                consts::ESC,
+                consts::CURSOR_DOWN1
+            ),
+            (self.Height - 1) as usize,
+        );
+
+        cursor::move_to(self.PosRow, self.PosCol);
+        print!(
+            "{}{}{}",
+            consts::DEC_TOP_LEFT_CORNER,
+            str::repeat(consts::DEC_HORIZ_LINE, (self.Width - 2) as usize),
+            consts::DEC_TOP_RIGHT_CORNER
+        );
+
+        cursor::move_to(self.PosRow + 1, self.PosCol);
+        print!("{}", vert_line);
+
+        cursor::move_to(self.PosRow + 1, self.PosCol + self.Width - 1);
+        print!("{}", vert_line);
+
+        cursor::move_to(self.PosRow + self.Height, self.PosCol);
+        print!(
+            "{}{}{}",
+            consts::DEC_BOTTOM_LEFT_CORNER,
+            str::repeat(consts::DEC_HORIZ_LINE, (self.Width - 2) as usize),
+            consts::DEC_BOTTOM_RIGHT_CORNER
+        );
+
+        misc::ascii_chars_drawing();
+    }
+
+    fn process(&self) -> Vec<&str> {
         let mut start: i16 = -1;
-        let mut count = 0;
+        let mut count = 0; // number of characters seen for the current line
         let mut lines = vec![];
+        let mut skip_until_newline = false;
 
         for (idx, ch) in self.buffer.char_indices() {
-            count += 1;
+            if !skip_until_newline
+            { 
+                count += 1;
+            }
             //println!("looking at {}, start is {}, count is {}", ch, start, count);
 
             if ch == '\r' || ch == '\n' {
@@ -70,20 +121,26 @@ impl Window {
                 }
                 start = idx as i16;
                 count = 0;
+                skip_until_newline = false;
                 continue;
             }
 
-            if count == self.Width - 2 || idx == self.buffer.len() -1 {
+            if count == self.Width - 2 || idx == self.buffer.len() - 1 {
                 /*println!(
                     "pushing start {}, count {}, actual {}",
                     start,
                     count,
                     &self.buffer[(start + 1) as usize..idx + 1 as usize]
                 );*/
-                lines.push(&self.buffer[(start + 1) as usize..idx + 1 as usize]);
+                if !skip_until_newline {
+                    lines.push(&self.buffer[(start + 1) as usize..idx + 1 as usize]);
+                }
 
                 start = idx as i16;
                 count = 0;
+                if !self.wrap {
+                    skip_until_newline = true;
+                }
                 continue;
             }
         }

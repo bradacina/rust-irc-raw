@@ -3,5 +3,5 @@ pub mod color;
 pub mod cursor;
 pub mod misc;
 
-mod consts;
+pub mod consts;
 mod error;
