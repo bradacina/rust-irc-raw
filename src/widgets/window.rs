@@ -31,10 +31,19 @@ impl Window {
     pub fn draw(&mut self) {
         self.draw_margins();
         let lines = self.process();
+        let height = self.Height as usize;
+
+        let mut enough_lines = &lines[..];
+
+        if self.auto_scroll && lines.len() > height {
+            let split_at = lines.len() - (height - 1);
+            let (_,enough_lines_split) = lines.split_at(split_at);
+            enough_lines = enough_lines_split;
+        }
 
         let mut line_count = 1;
 
-        lines.iter().for_each(|line| {
+        enough_lines.iter().for_each(|line| {
             if line_count >= self.Height {
                 return;
             }

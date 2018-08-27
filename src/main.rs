@@ -4,12 +4,13 @@ extern crate failure;
 use connection_reader::ConnectionReader;
 use connection_writer as cw;
 use message_handler as mh;
-use std::io::stdout;
-use std::io::Write;
+use std::io::{stdout, Write};
 use std::net::TcpStream;
-use terminal::{color, cursor, misc, term_init};
+use terminal::misc;
 use widgets::window::Window;
+use program_lifecycle::ProgramLifecycle;
 
+mod program_lifecycle;
 mod connection_reader;
 mod connection_writer;
 mod message_handler;
@@ -19,9 +20,7 @@ mod widgets;
 extern crate libc;
 
 fn main() {
-    let mut _term_init = term_init::TermInit::init();
-
-    misc::use_alternate_screen_buffer();
+    let mut _program_init = ProgramLifecycle::init();
 
     let (x, y) = misc::query_cursor_pos().expect("Error while trying to Query Cursor Position");
 
@@ -56,17 +55,20 @@ fn main() {
         main_window.add(&t);
     });
 
+    main_window.auto_scroll = true;
+
     main_window.draw();
     users_window.draw();
     chanlist_window.draw();
 
     stdout().flush().unwrap();
 
-    std::thread::sleep(std::time::Duration::from_secs(10));
+    std::thread::sleep(std::time::Duration::from_secs(3));
 
-    color::reset();
-
-    misc::use_main_screen_buffer();
+    main_window.add("hello there\nhow are you\n");
+    main_window.draw();
+    stdout().flush().unwrap();
+    std::thread::sleep(std::time::Duration::from_secs(3));
     /*
     let mut write_buf = String::new();
 
