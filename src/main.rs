@@ -1,5 +1,8 @@
 #[macro_use]
 extern crate failure;
+#[macro_use]
+extern crate log;
+extern crate simplelog;
 
 use connection_reader::ConnectionReader;
 use connection_writer as cw;
@@ -10,6 +13,8 @@ use std::net::TcpStream;
 use std::time::Duration;
 use terminal::misc;
 use widgets::window::Window;
+use simplelog::*;
+use std::fs::File;
 
 mod connection_reader;
 mod connection_writer;
@@ -21,6 +26,8 @@ mod widgets;
 extern crate libc;
 
 fn main() {
+    WriteLogger::new(LevelFilter::Trace, Config::default(), File::create("my_rust_binary.log").unwrap());
+
     let mut _program_init = ProgramLifecycle::init();
 
     let (x, y) = misc::query_cursor_pos().expect("Error while trying to Query Cursor Position");
