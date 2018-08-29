@@ -19,7 +19,7 @@ pub fn send_nick(nick: &str, write_buf: &mut String) {
     write_buf.push_str("\r\n");
 }
 
-fn handle_message(message: &String, write_buf: &mut String) -> Result<(), String> {
+pub fn handle_message(message: &String, write_buf: &mut String) -> Result<(), String> {
     let mut token_iter = message.split_whitespace();
 
     let first = token_iter

@@ -7,6 +7,7 @@ use message_handler as mh;
 use program_lifecycle::ProgramLifecycle;
 use std::io::{stdout, Write};
 use std::net::TcpStream;
+use std::time::Duration;
 use terminal::misc;
 use widgets::window::Window;
 
@@ -31,7 +32,7 @@ fn main() {
     let chanlist_window_size: usize = (x as f32 * 0.2) as usize;
 
     let mut main_window = Window::new(main_window_size as u16, (y - 2) as u16, 1, 1);
-    
+
     let mut users_window = Window::new(
         users_window_size as u16,
         y as u16,
@@ -58,7 +59,6 @@ fn main() {
 
     stdout().flush().unwrap();
 
-    /*
     let mut write_buf = String::new();
 
     let timeout_duration = Some(Duration::from_millis(10));
@@ -73,16 +73,20 @@ fn main() {
     mh::send_nick("testuser123", &mut write_buf);
 
     loop {
-        loop_once(&mut con, &mut write_buf, &mut reader);
-    }
-    */
-}
+        let message_iter = reader.read_messages(&mut con);
 
-fn loop_once(con: &mut TcpStream, write_buf: &mut String, reader: &mut ConnectionReader) {
-    let message_iter = reader.read_messages(con);
+        if let Some(messages) = message_iter {
+            for message in messages {
+                main_window.add(&message);
+                main_window.add("\n");
+                mh::handle_message(&message, &mut write_buf)
+                    .expect(&format!("{} was not in the correct format", message));
+            }
 
-    if let Some(messages) = message_iter {
-        mh::handle_messages(messages, write_buf);
+            cw::write_connection(&mut con, &mut write_buf);
+
+            main_window.draw();
+            stdout().flush().unwrap();
+        }
     }
-    cw::write_connection(con, write_buf);
 }
