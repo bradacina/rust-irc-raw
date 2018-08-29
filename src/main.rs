@@ -4,16 +4,16 @@ extern crate failure;
 use connection_reader::ConnectionReader;
 use connection_writer as cw;
 use message_handler as mh;
+use program_lifecycle::ProgramLifecycle;
 use std::io::{stdout, Write};
 use std::net::TcpStream;
 use terminal::misc;
 use widgets::window::Window;
-use program_lifecycle::ProgramLifecycle;
 
-mod program_lifecycle;
 mod connection_reader;
 mod connection_writer;
 mod message_handler;
+mod program_lifecycle;
 mod terminal;
 mod widgets;
 
@@ -31,12 +31,14 @@ fn main() {
     let chanlist_window_size: usize = (x as f32 * 0.2) as usize;
 
     let mut main_window = Window::new(main_window_size as u16, (y - 2) as u16, 1, 1);
+    
     let mut users_window = Window::new(
         users_window_size as u16,
         y as u16,
         1,
         (main_window_size + 1) as u16,
     );
+
     let mut chanlist_window = Window::new(
         chanlist_window_size as u16,
         y as u16,
@@ -44,16 +46,9 @@ fn main() {
         (main_window_size + users_window_size + 1) as u16,
     );
 
-    main_window.add("main window");
-    users_window.add("users window");
-    chanlist_window.add("channels window");
-
-    let mut t = str::repeat("q", 150);
-    t.push_str("\r\n");
-    (1..100).for_each(|i| {
-        main_window.add(&format!("{}",i));
-        main_window.add(&t);
-    });
+    main_window.add("main window\n");
+    users_window.add("users window\n");
+    chanlist_window.add("channels window\n");
 
     main_window.auto_scroll = true;
 
@@ -63,12 +58,6 @@ fn main() {
 
     stdout().flush().unwrap();
 
-    std::thread::sleep(std::time::Duration::from_secs(3));
-
-    main_window.add("hello there\nhow are you\n");
-    main_window.draw();
-    stdout().flush().unwrap();
-    std::thread::sleep(std::time::Duration::from_secs(3));
     /*
     let mut write_buf = String::new();
 
