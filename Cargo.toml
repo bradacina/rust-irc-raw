@@ -7,3 +7,4 @@ authors = ["animosity"]
 libc="*"
 failure="*"
 simplelog="*"
+log="*"

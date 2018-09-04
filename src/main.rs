@@ -8,13 +8,13 @@ use connection_reader::ConnectionReader;
 use connection_writer as cw;
 use message_handler as mh;
 use program_lifecycle::ProgramLifecycle;
+use simplelog::*;
+use std::fs::File;
 use std::io::{stdout, Write};
 use std::net::TcpStream;
 use std::time::Duration;
 use terminal::misc;
 use widgets::window::Window;
-use simplelog::*;
-use std::fs::File;
 
 mod connection_reader;
 mod connection_writer;
@@ -26,7 +26,11 @@ mod widgets;
 extern crate libc;
 
 fn main() {
-    WriteLogger::new(LevelFilter::Trace, Config::default(), File::create("my_rust_binary.log").unwrap());
+    WriteLogger::init(
+        LevelFilter::Trace,
+        Config::default(),
+        File::create("my_rust_binary.log").unwrap(),
+    );
 
     let mut _program_init = ProgramLifecycle::init();
 

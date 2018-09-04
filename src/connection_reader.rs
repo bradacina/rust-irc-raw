@@ -32,7 +32,7 @@ impl ConnectionReader {
 
         let message = message_result.unwrap();
 
-        //println!("Received\r\n{}", message);
+        trace!("Received\r\n{}", message);
 
         Some(message.lines().map(|item| String::from(item)).collect::<Vec<_>>())
     }
