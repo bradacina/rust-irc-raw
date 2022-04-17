@@ -83,7 +83,7 @@ impl TermInit {
             }
         }
 
-        println!("successfully set console mode");
+        debug!("successfully set console mode");
         TermInit {
             hOut,
             hIn,
@@ -108,7 +108,7 @@ impl Drop for TermInit {
         if self.hOut != INVALID_HANDLE_VALUE {
             unsafe {
                 if SetConsoleMode(self.hOut, self.originalOutputMode) == FALSE {
-                    eprintln!("could not reset the original stdout console mode");
+                    error!("could not reset the original stdout console mode");
                 }
             }
         }
@@ -116,7 +116,7 @@ impl Drop for TermInit {
         if self.hIn != INVALID_HANDLE_VALUE {
             unsafe {
                 if SetConsoleMode(self.hIn, self.originalInputMode) == FALSE {
-                    eprintln!("could not reset the original stdin console mode");
+                    error!("could not reset the original stdin console mode");
                 }
             }
         }

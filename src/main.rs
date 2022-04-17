@@ -1,14 +1,19 @@
 #[macro_use]
 extern crate failure;
+#[macro_use]
+extern crate log;
+extern crate simplelog;
 
 use connection_reader::ConnectionReader;
 use connection_writer as cw;
 use message_handler as mh;
 use program_lifecycle::ProgramLifecycle;
-use std::io::{stdout, Write};
+use simplelog::*;
+use std::fs::File;
+use std::io::{stdin, stdout, Write, Read};
 use std::net::TcpStream;
 use std::time::Duration;
-use terminal::misc;
+use terminal::{cursor, misc};
 use widgets::window::Window;
 
 mod connection_reader;
@@ -21,9 +26,16 @@ mod widgets;
 extern crate libc;
 
 fn main() {
+    WriteLogger::init(
+        LevelFilter::Trace,
+        Config::default(),
+        File::create("my_rust_binary.log").unwrap(),
+    ).unwrap();
+
     let mut _program_init = ProgramLifecycle::init();
 
-    let (x, y) = misc::query_cursor_pos().expect("Error while trying to Query Cursor Position");
+    let (x, y) =
+        misc::get_screen_dimensions().expect("Error while trying to Query Cursor Position");
 
     //break up the screen width into 3 areas (60% for main display, 20% for users in channel, 20% for channel list )
 
@@ -71,11 +83,16 @@ fn main() {
 
     mh::send_user("testuser", &mut write_buf);
     mh::send_nick("testuser123", &mut write_buf);
+    cursor::move_to(y as u16, 1);
+    stdout().flush().unwrap();
+    let mut buf = [0;10];
 
     loop {
         let message_iter = reader.read_messages(&mut con);
 
         if let Some(messages) = message_iter {
+            let old_position = misc::query_cursor_pos().expect("could not get cursor position");
+            trace!("Old position {} {}\r\n", old_position.1, old_position.0);
             for message in messages {
                 main_window.add(&message);
                 main_window.add("\n");
@@ -86,7 +103,13 @@ fn main() {
             cw::write_connection(&mut con, &mut write_buf);
 
             main_window.draw();
+
+            cursor::move_to(old_position.1 as u16, old_position.0 as u16);
             stdout().flush().unwrap();
+
+            stdin().read(& mut buf).unwrap();
+
+            trace!("Read {:?}\n", buf);
         }
     }
 }

@@ -34,13 +34,13 @@ pub fn ascii_chars_drawing() {
     print!("{}{}", ESC, ASCII_CHARS_DRAWING);
 }
 
-pub fn query_cursor_pos() -> Result<(usize, usize), Error> {
+pub fn get_screen_dimensions() -> Result<(usize, usize), Error> {
     cursor::move_to(999, 999);
-    print!("{}{}", CSI, QUERY_CURSOR_POS);
-    stdout().flush().unwrap();
+    query_cursor_pos()
+}
 
-    cursor::move_to(5,5);
-    print!("sent query");
+pub fn query_cursor_pos() -> Result<(usize, usize), Error> {
+    print!("{}{}", CSI, QUERY_CURSOR_POS);
     stdout().flush().unwrap();
 
     let r = read_until('R');

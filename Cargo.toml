@@ -6,3 +6,5 @@ authors = ["animosity"]
 [dependencies]
 libc="*"
 failure="*"
+simplelog="*"
+log="*"
