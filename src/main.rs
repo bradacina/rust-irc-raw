@@ -10,7 +10,7 @@ use message_handler as mh;
 use program_lifecycle::ProgramLifecycle;
 use simplelog::*;
 use std::fs::File;
-use std::io::{stdout, Write};
+use std::io::{stdin, stdout, Write, Read};
 use std::net::TcpStream;
 use std::time::Duration;
 use terminal::{cursor, misc};
@@ -85,6 +85,7 @@ fn main() {
     mh::send_nick("testuser123", &mut write_buf);
     cursor::move_to(y as u16, 1);
     stdout().flush().unwrap();
+    let mut buf = [0;10];
 
     loop {
         let message_iter = reader.read_messages(&mut con);
@@ -105,6 +106,10 @@ fn main() {
 
             cursor::move_to(old_position.1 as u16, old_position.0 as u16);
             stdout().flush().unwrap();
+
+            stdin().read(& mut buf).unwrap();
+
+            trace!("Read {:?}\n", buf);
         }
     }
 }
